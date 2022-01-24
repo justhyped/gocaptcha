@@ -12,6 +12,14 @@ Run the following command in your project folder:
  | RecaptchaV3     | ✅        | ✅           | ✅                |
  | Image Recaptcha | ✅        | ✅           | ✅                |
 
+Software like XEVil and CapMonster are also supported, but it gets a little trickier.
+Such software runs on a local ip:port so you must specify that with `CustomServiceUrl` 
+(don't include the protocol as it defaults to http)
+
+If you intend to use XEVil or CapMonster with this program you should check which API it supports (Either 2Captcha or AntiCaptcha).
+Don't forget to add firewall rules and host the captcha software on a public port when using
+XEVil or CapMonster between different machines.
+
 ## Usage
 ### RecaptchaV2
 ```go
