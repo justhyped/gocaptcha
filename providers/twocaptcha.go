@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/justhyped/gocaptcha/helpers"
+	"github.com/justhyped/gocaptcha/models"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 )
 
-func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
+func TwoCaptchaSolveRecaptchaV2(payload *models.RecaptchaV2Payload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -19,7 +21,7 @@ func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, 
 		payload.CustomServiceUrl = "2captcha.com"
 	}
 
-	captchaResponse := payload.createRecaptchaResponse()
+	captchaResponse := payload.CreateRecaptchaResponse()
 
 	var submitUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/in.php")
 	var pollUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/res.php")
@@ -30,28 +32,28 @@ func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, 
 	urlParams.Set("method", "userrecaptcha")
 	urlParams.Set("googlekey", payload.EndpointKey)
 	urlParams.Set("pageurl", payload.EndpointUrl)
-	urlParams.Set("invisible", booleanToString(payload.IsInvisibleCaptcha))
+	urlParams.Set("invisible", helpers.BooleanToString(payload.IsInvisibleCaptcha))
 
 	request, err := http.Get(fmt.Sprint(submitUrl, "?", urlParams.Encode()))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := twoCaptchaResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.Status == 1 {
 		captchaResponse.TaskId = responseAsJSON.Request
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -65,18 +67,18 @@ func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, 
 
 		request, err = http.Get(fmt.Sprint(pollUrl, "?", urlParams.Encode()))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := twoCaptchaResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.Status == 1 {
@@ -85,12 +87,12 @@ func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, 
 		}
 
 		if responseAsJSON.Status == 0 && !strings.Contains(responseAsJSON.Request, "NOT_READY") {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.Request)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.Request)
 		}
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took too long to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took too long to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}
@@ -98,7 +100,7 @@ func twoCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, 
 	return captchaResponse, nil
 }
 
-func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
+func TwoCaptchaSolveRecaptchaV3(payload *models.RecaptchaV3Payload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -107,7 +109,7 @@ func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, 
 		payload.CustomServiceUrl = "2captcha.com"
 	}
 
-	captchaResponse := payload.createRecaptchaResponse()
+	captchaResponse := payload.CreateRecaptchaResponse()
 
 	var submitUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/in.php")
 	var pollUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/res.php")
@@ -130,24 +132,24 @@ func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, 
 
 	request, err := http.Get(fmt.Sprint(submitUrl, "?", urlParams.Encode()))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := twoCaptchaResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.Status == 1 {
 		captchaResponse.TaskId = responseAsJSON.Request
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -161,18 +163,18 @@ func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, 
 
 		request, err = http.Get(fmt.Sprint(pollUrl, "?", urlParams.Encode()))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := twoCaptchaResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.Status == 1 {
@@ -181,12 +183,12 @@ func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, 
 		}
 
 		if responseAsJSON.Status == 0 && !strings.Contains(responseAsJSON.Request, "NOT_READY") {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.Request)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.Request)
 		}
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took too long to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took too long to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}
@@ -194,7 +196,7 @@ func twoCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, 
 	return captchaResponse, nil
 }
 
-func twoCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
+func TwoCaptchaSolveImageCaptcha(payload *models.ImageCaptchaPayload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -203,7 +205,7 @@ func twoCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse
 		payload.CustomServiceUrl = "2captcha.com"
 	}
 
-	captchaResponse := payload.createImageCaptchaResponse()
+	captchaResponse := payload.CreateImageCaptchaResponse()
 
 	var submitUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/in.php")
 	var pollUrl = fmt.Sprint(protocol, "://", payload.CustomServiceUrl, "/res.php")
@@ -224,24 +226,24 @@ func twoCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse
 
 	request, err := http.Get(fmt.Sprint(submitUrl, "?", urlParams.Encode()))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := twoCaptchaResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.Status == 1 {
 		captchaResponse.TaskId = responseAsJSON.Request
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorText)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -255,18 +257,18 @@ func twoCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse
 
 		request, err = http.Get(fmt.Sprint(pollUrl, "?", urlParams.Encode()))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := twoCaptchaResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.Status == 1 {
@@ -275,12 +277,12 @@ func twoCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse
 		}
 
 		if responseAsJSON.Status == 0 && !strings.Contains(responseAsJSON.Request, "NOT_READY") {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.Request)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.Request)
 		}
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took too long to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took too long to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}

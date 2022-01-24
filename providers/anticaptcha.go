@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/justhyped/gocaptcha/helpers"
+	"github.com/justhyped/gocaptcha/models"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
+func AntiCaptchaSolveRecaptchaV2(payload *models.RecaptchaV2Payload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -19,7 +21,7 @@ func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse,
 		payload.CustomServiceUrl = "api.anti-captcha.com"
 	}
 
-	captchaResponse := payload.createRecaptchaResponse()
+	captchaResponse := payload.CreateRecaptchaResponse()
 
 	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
 	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
@@ -35,24 +37,24 @@ func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse,
 
 	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := antiCaptchaCreateResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.ErrorID == 0 {
 		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -63,22 +65,22 @@ func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse,
 	for captchaResponse.Solution == "" {
 		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := antiCaptchaResultResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 		}
 
 		if responseAsJSON.Status == "ready" {
@@ -88,15 +90,15 @@ func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse,
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}
 
-	return &CaptchaResponse{}, errors.New("reached end of function")
+	return &models.CaptchaResponse{}, errors.New("reached end of function")
 }
 
-func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
+func AntiCaptchaSolveRecaptchaV3(payload *models.RecaptchaV3Payload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -105,7 +107,7 @@ func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse,
 		payload.CustomServiceUrl = "api.anti-captcha.com"
 	}
 
-	captchaResponse := payload.createRecaptchaResponse()
+	captchaResponse := payload.CreateRecaptchaResponse()
 
 	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
 	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
@@ -130,24 +132,24 @@ func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse,
 
 	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := antiCaptchaCreateResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.ErrorID == 0 {
 		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -158,22 +160,22 @@ func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse,
 	for captchaResponse.Solution == "" {
 		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := antiCaptchaResultResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 		}
 
 		if responseAsJSON.Status == "ready" {
@@ -183,15 +185,15 @@ func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse,
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}
 
-	return &CaptchaResponse{}, errors.New("reached end of function")
+	return &models.CaptchaResponse{}, errors.New("reached end of function")
 }
 
-func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
+func AntiCaptchaSolveImageCaptcha(payload *models.ImageCaptchaPayload) (*models.CaptchaResponse, error) {
 	var tries int
 
 	protocol := "http"
@@ -200,7 +202,7 @@ func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaRespons
 		payload.CustomServiceUrl = "api.anti-captcha.com"
 	}
 
-	captchaResponse := payload.createImageCaptchaResponse()
+	captchaResponse := payload.CreateImageCaptchaResponse()
 
 	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
 	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
@@ -216,24 +218,24 @@ func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaRespons
 
 	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
-	response, err := readResponseBody(request)
+	response, err := helpers.ReadResponseBody(request)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	responseAsJSON := antiCaptchaCreateResponse{}
 	err = json.Unmarshal([]byte(response), &responseAsJSON)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return &models.CaptchaResponse{}, err
 	}
 
 	if responseAsJSON.ErrorID == 0 {
 		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+		return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 	}
 
 	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
@@ -244,22 +246,22 @@ func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaRespons
 	for captchaResponse.Solution == "" {
 		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
-		response, err := readResponseBody(request)
+		response, err := helpers.ReadResponseBody(request)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		responseAsJSON := antiCaptchaResultResponse{}
 		err = json.Unmarshal([]byte(response), &responseAsJSON)
 		if err != nil {
-			return &CaptchaResponse{}, err
+			return &models.CaptchaResponse{}, err
 		}
 
 		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+			return &models.CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
 		}
 
 		if responseAsJSON.Status == "ready" {
@@ -269,12 +271,12 @@ func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaRespons
 
 		tries++
 		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
+			return &models.CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
 		}
 		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
 	}
 
-	return &CaptchaResponse{}, errors.New("reached end of function")
+	return &models.CaptchaResponse{}, errors.New("reached end of function")
 }
 
 type antiCaptchaCreateResponse struct {

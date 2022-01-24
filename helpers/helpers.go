@@ -9,7 +9,7 @@ import (
 	"github.com/dsnet/compress/brotli"
 )
 
-func booleanToString(b bool) string {
+func BooleanToString(b bool) string {
 	if b {
 		return "1"
 	}
@@ -17,7 +17,7 @@ func booleanToString(b bool) string {
 	return "0"
 }
 
-func readResponseBody(response *http.Response) (string, error) {
+func ReadResponseBody(response *http.Response) (string, error) {
 	var reader io.ReadCloser
 	var err error
 	switch response.Header.Get("Content-Encoding") {

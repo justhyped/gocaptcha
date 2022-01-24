@@ -1,9 +1,10 @@
-package gocaptcha
+package models
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/justhyped/gocaptcha/helpers"
 	"net/http"
 	"net/url"
 )
@@ -43,7 +44,7 @@ func (response *CaptchaResponse) reportRecaptchaTwoCaptcha(goodOrBad string) {
 		return
 	}
 
-	_, _ = readResponseBody(request)
+	_, _ = helpers.ReadResponseBody(request)
 }
 
 func (response *CaptchaResponse) reportRecaptchaAntiCaptcha(goodOrBad string) {
@@ -62,5 +63,5 @@ func (response *CaptchaResponse) reportRecaptchaAntiCaptcha(goodOrBad string) {
 		return
 	}
 
-	_, _ = readResponseBody(request)
+	_, _ = helpers.ReadResponseBody(request)
 }

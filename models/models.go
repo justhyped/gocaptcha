@@ -1,6 +1,6 @@
 package models
 
-func (p *RecaptchaV2Payload) setDefaultValues() {
+func (p *RecaptchaV2Payload) SetDefaultValues() {
 	if p.InitialWaitTime == 0 {
 		p.InitialWaitTime = 10
 	}
@@ -14,7 +14,7 @@ func (p *RecaptchaV2Payload) setDefaultValues() {
 	}
 }
 
-func (p *RecaptchaV3Payload) setDefaultValues() {
+func (p *RecaptchaV3Payload) SetDefaultValues() {
 	if p.InitialWaitTime == 0 {
 		p.InitialWaitTime = 10
 	}
@@ -32,7 +32,7 @@ func (p *RecaptchaV3Payload) setDefaultValues() {
 	}
 }
 
-func (p *ImageCaptchaPayload) setDefaultValues() {
+func (p *ImageCaptchaPayload) SetDefaultValues() {
 	if p.InitialWaitTime == 0 {
 		p.InitialWaitTime = 5
 	}
@@ -46,7 +46,7 @@ func (p *ImageCaptchaPayload) setDefaultValues() {
 	}
 }
 
-func (p *ImageCaptchaPayload) createImageCaptchaResponse() *CaptchaResponse {
+func (p *ImageCaptchaPayload) CreateImageCaptchaResponse() *CaptchaResponse {
 	return &CaptchaResponse{
 		Service:       p.ServiceName,
 		ServiceApiKey: p.ServiceApiKey,
@@ -54,7 +54,7 @@ func (p *ImageCaptchaPayload) createImageCaptchaResponse() *CaptchaResponse {
 	}
 }
 
-func (p *RecaptchaV2Payload) createRecaptchaResponse() *CaptchaResponse {
+func (p *RecaptchaV2Payload) CreateRecaptchaResponse() *CaptchaResponse {
 	return &CaptchaResponse{
 		Service:       p.ServiceName,
 		ServiceApiKey: p.ServiceApiKey,
@@ -62,7 +62,7 @@ func (p *RecaptchaV2Payload) createRecaptchaResponse() *CaptchaResponse {
 	}
 }
 
-func (p *RecaptchaV3Payload) createRecaptchaResponse() *CaptchaResponse {
+func (p *RecaptchaV3Payload) CreateRecaptchaResponse() *CaptchaResponse {
 	return &CaptchaResponse{
 		Service:       p.ServiceName,
 		ServiceApiKey: p.ServiceApiKey,
