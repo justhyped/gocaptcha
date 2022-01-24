@@ -1,4 +1,4 @@
-package models
+package gocaptcha
 
 func (p *RecaptchaV2Payload) SetDefaultValues() {
 	if p.InitialWaitTime == 0 {

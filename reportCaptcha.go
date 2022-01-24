@@ -1,4 +1,4 @@
-package models
+package gocaptcha
 
 import (
 	"bytes"

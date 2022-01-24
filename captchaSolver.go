@@ -2,15 +2,14 @@ package gocaptcha
 
 import (
 	"errors"
-	"github.com/justhyped/gocaptcha/models"
 	"github.com/justhyped/gocaptcha/providers"
 )
 
 // SolveImageCaptcha solves image captchas
-func SolveImageCaptcha(payload *models.ImageCaptchaPayload) (*models.CaptchaResponse, error) {
+func SolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
 	payload.SetDefaultValues()
 
-	imageSolution, err := &models.CaptchaResponse{}, errors.New("unsupported captcha service")
+	imageSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
 
 	switch payload.ServiceName {
 	case "2Captcha":
@@ -28,10 +27,10 @@ func SolveImageCaptcha(payload *models.ImageCaptchaPayload) (*models.CaptchaResp
 }
 
 // SolveRecaptchaV2 solves recaptcha V2
-func SolveRecaptchaV2(payload *models.RecaptchaV2Payload) (*models.CaptchaResponse, error) {
+func SolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
 	payload.SetDefaultValues()
 
-	captchaSolution, err := &models.CaptchaResponse{}, errors.New("unsupported captcha service")
+	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
 
 	switch payload.ServiceName {
 	case "2Captcha":
@@ -49,10 +48,10 @@ func SolveRecaptchaV2(payload *models.RecaptchaV2Payload) (*models.CaptchaRespon
 }
 
 // SolveRecaptchaV3 solves recaptcha V3
-func SolveRecaptchaV3(payload *models.RecaptchaV3Payload) (*models.CaptchaResponse, error) {
+func SolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
 	payload.SetDefaultValues()
 
-	captchaSolution, err := &models.CaptchaResponse{}, errors.New("unsupported captcha service")
+	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
 
 	switch payload.ServiceName {
 	case "2Captcha":

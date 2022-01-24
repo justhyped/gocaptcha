@@ -1,7 +1,6 @@
 package gocaptcha
 
 import (
-	"github.com/justhyped/gocaptcha/models"
 	"log"
 	"os"
 	"testing"
@@ -32,7 +31,7 @@ func TestSolveRecaptchaV2AntiCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV2Payload{
+	payload := RecaptchaV2Payload{
 		EndpointUrl:   "https://www.google.com/recaptcha/api2/demo",
 		EndpointKey:   "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
 		ServiceApiKey: antiCaptchaKey,
@@ -50,7 +49,7 @@ func TestSolveRecaptchaV2TwoCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV2Payload{
+	payload := RecaptchaV2Payload{
 		EndpointUrl:   "https://www.google.com/recaptcha/api2/demo",
 		EndpointKey:   "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
 		ServiceApiKey: twoCaptchaKey,
@@ -68,7 +67,7 @@ func TestSolveRecaptchaV2CapMonster(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV2Payload{
+	payload := RecaptchaV2Payload{
 		EndpointUrl:   "https://www.google.com/recaptcha/api2/demo",
 		EndpointKey:   "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
 		ServiceApiKey: capMonsterCloudKey,
@@ -86,7 +85,7 @@ func TestSolveRecaptchaV3AntiCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV3Payload{
+	payload := RecaptchaV3Payload{
 		EndpointUrl:   "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
 		EndpointKey:   "6LdyC2cUAAAAACGuDKpXeDorzUDWXmdqeg-xy696",
 		ServiceApiKey: antiCaptchaKey,
@@ -105,7 +104,7 @@ func TestSolveRecaptchaV3TwoCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV3Payload{
+	payload := RecaptchaV3Payload{
 		EndpointUrl:   "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
 		EndpointKey:   "6LdyC2cUAAAAACGuDKpXeDorzUDWXmdqeg-xy696",
 		ServiceApiKey: twoCaptchaKey,
@@ -124,7 +123,7 @@ func TestSolveRecaptchaV3CapMonster(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.RecaptchaV3Payload{
+	payload := RecaptchaV3Payload{
 		EndpointUrl:   "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
 		EndpointKey:   "6LdyC2cUAAAAACGuDKpXeDorzUDWXmdqeg-xy696",
 		ServiceApiKey: capMonsterCloudKey,
@@ -168,7 +167,7 @@ func TestSolveImageCaptchaTwoCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.ImageCaptchaPayload{
+	payload := ImageCaptchaPayload{
 		ServiceApiKey: twoCaptchaKey,
 		ServiceName:   "2Captcha",
 		Base64String:  imageBase64,
@@ -185,7 +184,7 @@ func TestSolveImageCaptchaAntiCaptcha(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.ImageCaptchaPayload{
+	payload := ImageCaptchaPayload{
 		ServiceApiKey: antiCaptchaKey,
 		ServiceName:   "AntiCaptcha",
 		Base64String:  imageBase64,
@@ -202,7 +201,7 @@ func TestSolveImageCaptchaCapMonster(t *testing.T) {
 		t.Skip()
 	}
 
-	payload := models.ImageCaptchaPayload{
+	payload := ImageCaptchaPayload{
 		ServiceApiKey: capMonsterCloudKey,
 		ServiceName:   "CapMonster Cloud",
 		Base64String:  imageBase64,
