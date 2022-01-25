@@ -31,6 +31,8 @@ XEVil or CapMonster between different machines.
 	}
 	
     captcha, err := gocaptcha.SolveRecaptchaV2(&payload)
+    
+    // use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
 ```
 
 These are all supported variables to use in RecaptchaV2Payload:
@@ -76,6 +78,8 @@ MaxRetries int
     }
 
     captcha, err := gocaptcha.SolveRecaptchaV3(&payload)
+
+    // use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
 ```
 
 These are all supported variables to use in RecaptchaV3Payload:
@@ -125,6 +129,9 @@ payload := gocaptcha.ImageCaptchaPayload{
 }
 
 captcha, err := gocaptcha.SolveImageCaptcha(&payload)
+
+// don't mind the naming, this also works for image captcha's.
+// use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
 ```
 
 These are all supported variables to use in ImageCaptchaPayload:
