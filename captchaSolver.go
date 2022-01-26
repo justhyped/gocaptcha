@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// SolveImageCaptcha solves image captchas
+// SolveImageCaptcha solves an image captcha
 func SolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
 	payload.SetDefaultValues()
 
@@ -62,6 +62,27 @@ func SolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
 		// as AntiCaptcha so we just alter the api endpoint
 		payload.CustomServiceUrl = "api.capmonster.cloud"
 		captchaSolution, err = antiCaptchaSolveRecaptchaV3(payload)
+	}
+
+	return captchaSolution, err
+}
+
+// SolveHCaptcha solves hCaptcha
+func SolveHCaptcha(payload *HCaptchaPayload) (*CaptchaResponse, error) {
+	payload.SetDefaultValues()
+
+	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
+
+	switch payload.ServiceName {
+	case "2Captcha":
+		captchaSolution, err = twoCaptchaSolveHCaptcha(payload)
+	case "AntiCaptcha":
+		captchaSolution, err = antiCaptchaSolveHCaptcha(payload)
+	case "CapMonster Cloud":
+		// CapMonster Cloud has the same api
+		// as AntiCaptcha so we just alter the api endpoint
+		payload.CustomServiceUrl = "api.capmonster.cloud"
+		captchaSolution, err = antiCaptchaSolveHCaptcha(payload)
 	}
 
 	return captchaSolution, err

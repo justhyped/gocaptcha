@@ -8,7 +8,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Supported values are V2, V3, image, AntiCaptcha, 2Captcha and CapMonster Cloud
+// Supported values are V2, V3, image, HCaptcha, AntiCaptcha, 2Captcha and CapMonster Cloud
 var testGroup string
 
 var twoCaptchaKey string
@@ -24,6 +24,8 @@ func init() {
 	twoCaptchaKey = os.Getenv("2CAPTCHA")
 	antiCaptchaKey = os.Getenv("ANTICAPTCHA")
 	capMonsterCloudKey = os.Getenv("CAPMONSTERCLOUD")
+
+	testGroup = "HCaptcha"
 }
 
 func TestSolveRecaptchaV2AntiCaptcha(t *testing.T) {
@@ -132,6 +134,60 @@ func TestSolveRecaptchaV3CapMonster(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV3(&payload)
+	checkError(t, err)
+
+	t.Log(captcha.Solution)
+}
+
+func TestSolveHCaptchaAntiCaptcha(t *testing.T) {
+	if testGroup != "HCaptcha" && testGroup != "AntiCaptcha" && testGroup != "" {
+		t.Skip()
+	}
+
+	payload := HCaptchaPayload{
+		EndpointUrl:   "https://www.hcaptcha.com/",
+		EndpointKey:   "00000000-0000-0000-0000-000000000000",
+		ServiceApiKey: antiCaptchaKey,
+		ServiceName:   "AntiCaptcha",
+	}
+
+	captcha, err := SolveHCaptcha(&payload)
+	checkError(t, err)
+
+	t.Log(captcha.Solution)
+}
+
+func TestSolveHCaptchaTwoCaptcha(t *testing.T) {
+	if testGroup != "HCaptcha" && testGroup != "2Captcha" && testGroup != "" {
+		t.Skip()
+	}
+
+	payload := HCaptchaPayload{
+		EndpointUrl:   "http://democaptcha.com/demo-form-eng/hcaptcha.html",
+		EndpointKey:   "51829642-2cda-4b09-896c-594f89d700cc",
+		ServiceApiKey: twoCaptchaKey,
+		ServiceName:   "2Captcha",
+	}
+
+	captcha, err := SolveHCaptcha(&payload)
+	checkError(t, err)
+
+	t.Log(captcha.Solution)
+}
+
+func TestSolveHCaptchaCapMonster(t *testing.T) {
+	if testGroup != "HCaptcha" && testGroup != "CapMonster Cloud" && testGroup != "" {
+		t.Skip()
+	}
+
+	payload := HCaptchaPayload{
+		EndpointUrl:   "https://www.hcaptcha.com/",
+		EndpointKey:   "00000000-0000-0000-0000-000000000000",
+		ServiceApiKey: capMonsterCloudKey,
+		ServiceName:   "CapMonster Cloud",
+	}
+
+	captcha, err := SolveHCaptcha(&payload)
 	checkError(t, err)
 
 	t.Log(captcha.Solution)

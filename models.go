@@ -32,6 +32,20 @@ func (p *RecaptchaV3Payload) SetDefaultValues() {
 	}
 }
 
+func (p *HCaptchaPayload) SetDefaultValues() {
+	if p.InitialWaitTime == 0 {
+		p.InitialWaitTime = 10
+	}
+
+	if p.PollInterval == 0 {
+		p.PollInterval = 5
+	}
+
+	if p.MaxRetries == 0 {
+		p.MaxRetries = 15
+	}
+}
+
 func (p *ImageCaptchaPayload) SetDefaultValues() {
 	if p.InitialWaitTime == 0 {
 		p.InitialWaitTime = 5
@@ -55,6 +69,14 @@ func (p *ImageCaptchaPayload) CreateImageCaptchaResponse() *CaptchaResponse {
 }
 
 func (p *RecaptchaV2Payload) CreateRecaptchaResponse() *CaptchaResponse {
+	return &CaptchaResponse{
+		Service:       p.ServiceName,
+		ServiceApiKey: p.ServiceApiKey,
+		Endpoint:      p.CustomServiceUrl,
+	}
+}
+
+func (p *HCaptchaPayload) CreateHCaptchaResponse() *CaptchaResponse {
 	return &CaptchaResponse{
 		Service:       p.ServiceName,
 		ServiceApiKey: p.ServiceApiKey,
@@ -158,6 +180,34 @@ type ImageCaptchaPayload struct {
 	// Set this if the human solver needs additional information
 	// about how to solve the captcha
 	InstructionsForSolver string
+
+	// The time to wait before starting to poll result
+	InitialWaitTime int
+
+	// The time to wait between polling results
+	PollInterval int
+
+	// Max amount of poll attempts
+	MaxRetries int
+}
+
+type HCaptchaPayload struct {
+	// This is the endpoint that has Recaptcha Protection
+	EndpointUrl string
+
+	// This is the HCaptcha Key
+	// Can be found on the Endpoint URL page
+	EndpointKey string
+
+	// The API key for your captcha service
+	ServiceApiKey string
+
+	// The name of the captcha service
+	// Can be AntiCaptcha, 2Captcha or CapMonster Cloud
+	ServiceName string
+
+	// Set this in case you're using a custom solver like CapMonster (not cloud)
+	CustomServiceUrl string
 
 	// The time to wait before starting to poll result
 	InitialWaitTime int

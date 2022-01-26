@@ -6,11 +6,12 @@ Run the following command in your project folder:
 ``go get github.com/justhyped/gocaptcha``
 
 ## Support
-| Type            | 2Captcha | AntiCaptcha | CapMonster Cloud |
-|:----------------|:---------|:------------|:-----------------|
- | RecaptchaV2     | ✅        | ✅           | ✅                |
- | RecaptchaV3     | ✅        | ✅           | ✅                |
- | Image Recaptcha | ✅        | ✅           | ✅                |
+| Type              | 2Captcha | AntiCaptcha | CapMonster Cloud |
+|:------------------|:---------|:------------|:-----------------|
+ | RecaptchaV2       | ✅        | ✅           | ✅                |
+ | RecaptchaV3       | ✅        | ✅           | ✅                |
+| Image Recaptcha   | ✅        | ✅           | ✅                |
+| HCaptcha          | ✅        | ✅           | ✅                |
 
 Software like XEVil and CapMonster are also supported, but it gets a little trickier.
 Such software runs on a local ip:port so you must specify that with `CustomServiceUrl` 
@@ -70,16 +71,16 @@ MaxRetries int
 ### RecaptchaV3
 ```go
     payload := gocaptcha.RecaptchaV3Payload{
-        EndpointUrl:   "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
-        EndpointKey:   "6LdyC2cUAAAAACGuDKpXeDorzUDWXmdqeg-xy696",
-        ServiceApiKey: "key",
-        ServiceName:   "2Captcha",
-        Action:        "examples/v3scores",
-    }
+EndpointUrl:   "https://recaptcha-demo.appspot.com/recaptcha-v3-request-scores.php",
+EndpointKey:   "6LdyC2cUAAAAACGuDKpXeDorzUDWXmdqeg-xy696",
+ServiceApiKey: "key",
+ServiceName:   "2Captcha",
+Action:        "examples/v3scores",
+}
 
-    captcha, err := gocaptcha.SolveRecaptchaV3(&payload)
+captcha, err := gocaptcha.SolveRecaptchaV3(&payload)
 
-    // use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
+// use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
 ```
 
 These are all supported variables to use in RecaptchaV3Payload:
@@ -109,6 +110,49 @@ IsEnterprise bool
 
 // Defaults to 0.3, accepted values are 0.3, 0.6, 0.9
 MinScore float32
+
+// The time to wait before starting to poll result
+InitialWaitTime int
+
+// The time to wait between polling results
+PollInterval int
+
+// Max amount of poll attempts
+MaxRetries int
+```
+
+### HCaptcha
+```go
+    payload := gocaptcha.HCaptchaPayload{
+        EndpointUrl:   "https://www.hcaptcha.com/",
+        EndpointKey:   "00000000-0000-0000-0000-000000000000",
+        ServiceApiKey: "key",
+        ServiceName:   "2Captcha",
+    }
+
+    captcha, err := gocaptcha.SolveHCaptcha(&payload)
+
+    // use captcha.ReportGoodRecaptcha() or captcha.ReportBadCaptcha() to help the provider improve their services.
+```
+
+These are all supported variables to use in HCaptchaPayload:
+```go
+// This is the endpoint that has Recaptcha Protection
+EndpointUrl string
+
+// This is the HCaptcha Key
+// Can be found on the Endpoint URL page
+EndpointKey string
+
+// The API key for your captcha service
+ServiceApiKey string
+
+// The name of the captcha service
+// Can be AntiCaptcha, 2Captcha or CapMonster Cloud
+ServiceName string
+
+// Set this in case you're using a custom solver like CapMonster (not cloud)
+CustomServiceUrl string
 
 // The time to wait before starting to poll result
 InitialWaitTime int
