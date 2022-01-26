@@ -2,7 +2,6 @@ package gocaptcha
 
 import (
 	"errors"
-	"github.com/justhyped/gocaptcha/providers"
 )
 
 // SolveImageCaptcha solves image captchas
@@ -13,14 +12,14 @@ func SolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
 
 	switch payload.ServiceName {
 	case "2Captcha":
-		imageSolution, err = providers.TwoCaptchaSolveImageCaptcha(payload)
+		imageSolution, err = twoCaptchaSolveImageCaptcha(payload)
 	case "AntiCaptcha":
-		imageSolution, err = providers.AntiCaptchaSolveImageCaptcha(payload)
+		imageSolution, err = antiCaptchaSolveImageCaptcha(payload)
 	case "CapMonster Cloud":
 		// CapMonster Cloud has the same api
 		// as AntiCaptcha so we just alter the api endpoint
 		payload.CustomServiceUrl = "api.capmonster.cloud"
-		imageSolution, err = providers.AntiCaptchaSolveImageCaptcha(payload)
+		imageSolution, err = antiCaptchaSolveImageCaptcha(payload)
 	}
 
 	return imageSolution, err
@@ -34,14 +33,14 @@ func SolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
 
 	switch payload.ServiceName {
 	case "2Captcha":
-		captchaSolution, err = providers.TwoCaptchaSolveRecaptchaV2(payload)
+		captchaSolution, err = twoCaptchaSolveRecaptchaV2(payload)
 	case "AntiCaptcha":
-		captchaSolution, err = providers.AntiCaptchaSolveRecaptchaV2(payload)
+		captchaSolution, err = antiCaptchaSolveRecaptchaV2(payload)
 	case "CapMonster Cloud":
 		// CapMonster Cloud has the same api
 		// as AntiCaptcha so we just alter the api endpoint
 		payload.CustomServiceUrl = "api.capmonster.cloud"
-		captchaSolution, err = providers.AntiCaptchaSolveRecaptchaV2(payload)
+		captchaSolution, err = antiCaptchaSolveRecaptchaV2(payload)
 	}
 
 	return captchaSolution, err
@@ -55,14 +54,14 @@ func SolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
 
 	switch payload.ServiceName {
 	case "2Captcha":
-		captchaSolution, err = providers.TwoCaptchaSolveRecaptchaV3(payload)
+		captchaSolution, err = twoCaptchaSolveRecaptchaV3(payload)
 	case "AntiCaptcha":
-		captchaSolution, err = providers.AntiCaptchaSolveRecaptchaV3(payload)
+		captchaSolution, err = antiCaptchaSolveRecaptchaV3(payload)
 	case "CapMonster Cloud":
 		// CapMonster Cloud has the same api
 		// as AntiCaptcha so we just alter the api endpoint
 		payload.CustomServiceUrl = "api.capmonster.cloud"
-		captchaSolution, err = providers.AntiCaptchaSolveRecaptchaV3(payload)
+		captchaSolution, err = antiCaptchaSolveRecaptchaV3(payload)
 	}
 
 	return captchaSolution, err

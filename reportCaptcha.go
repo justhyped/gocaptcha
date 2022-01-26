@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/justhyped/gocaptcha/helpers"
+	"github.com/justhyped/gocaptcha/internal"
 	"net/http"
 	"net/url"
 )
@@ -44,7 +44,7 @@ func (response *CaptchaResponse) reportRecaptchaTwoCaptcha(goodOrBad string) {
 		return
 	}
 
-	_, _ = helpers.ReadResponseBody(request)
+	_, _ = internal.ReadResponseBody(request)
 }
 
 func (response *CaptchaResponse) reportRecaptchaAntiCaptcha(goodOrBad string) {
@@ -63,5 +63,5 @@ func (response *CaptchaResponse) reportRecaptchaAntiCaptcha(goodOrBad string) {
 		return
 	}
 
-	_, _ = helpers.ReadResponseBody(request)
+	_, _ = internal.ReadResponseBody(request)
 }
