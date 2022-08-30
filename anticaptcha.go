@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/justhyped/gocaptcha/internal"
+	"github.com/Alexvec00/gocaptcha/internal"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,12 +25,19 @@ func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse,
 	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
 	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
 
-	typeTask := map[string]interface{}{
-		"type":        "NoCaptchaTaskProxyless",
-		"websiteURL":  payload.EndpointUrl,
-		"websiteKey":  payload.EndpointKey,
-		"isInvisible": payload.IsInvisibleCaptcha}
-
+	var typeTask map[string]interface{}
+	if payload.IsEnterpriseCaptcha {
+		typeTask = map[string]interface{}{
+			"type":       "RecaptchaV2EnterpriseTaskProxyless",
+			"websiteURL": payload.EndpointUrl,
+			"websiteKey": payload.EndpointKey}
+	} else {
+		typeTask = map[string]interface{}{
+			"type":        "NoCaptchaTaskProxyless",
+			"websiteURL":  payload.EndpointUrl,
+			"websiteKey":  payload.EndpointKey,
+			"isInvisible": payload.IsInvisibleCaptcha}
+	}
 	createTask := map[string]interface{}{"clientKey": payload.ServiceApiKey, "task": typeTask}
 	jsonValue, _ := json.Marshal(createTask)
 

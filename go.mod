@@ -1,4 +1,4 @@
-module github.com/justhyped/gocaptcha
+module github.com/Alexvec00/gocaptcha
 
 go 1.17
 
