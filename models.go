@@ -121,9 +121,6 @@ type RecaptchaV2Payload struct {
 
 	// Max amount of poll attempts
 	MaxRetries int
-
-	// Enable if endpoint has enterprise Recaptcha V2
-	IsEnterpriseCaptcha bool
 }
 
 type RecaptchaV3Payload struct {

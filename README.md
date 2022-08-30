@@ -3,7 +3,7 @@ An API wrapper for popular captcha solvers such as AntiCaptcha and 2Captcha in G
 
 ## Installation
 Run the following command in your project folder:
-``go get github.com/Alexvec00/gocaptcha``
+``go get github.com/justhyped/gocaptcha``
 
 ## Support
 | Type              | 2Captcha | AntiCaptcha | CapMonster Cloud |
