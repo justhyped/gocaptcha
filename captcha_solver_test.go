@@ -25,7 +25,7 @@ func init() {
 	antiCaptchaKey = os.Getenv("ANTICAPTCHA")
 	capMonsterCloudKey = os.Getenv("CAPMONSTERCLOUD")
 
-	testGroup = "HCaptcha"
+	testGroup = "2Captcha"
 }
 
 func TestSolveRecaptchaV2AntiCaptcha(t *testing.T) {
@@ -41,7 +41,9 @@ func TestSolveRecaptchaV2AntiCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV2(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -59,7 +61,9 @@ func TestSolveRecaptchaV2TwoCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV2(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -77,7 +81,9 @@ func TestSolveRecaptchaV2CapMonster(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV2(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -96,7 +102,9 @@ func TestSolveRecaptchaV3AntiCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV3(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -115,7 +123,9 @@ func TestSolveRecaptchaV3TwoCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV3(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -134,7 +144,9 @@ func TestSolveRecaptchaV3CapMonster(t *testing.T) {
 	}
 
 	captcha, err := SolveRecaptchaV3(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -152,7 +164,9 @@ func TestSolveHCaptchaAntiCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveHCaptcha(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -170,7 +184,9 @@ func TestSolveHCaptchaTwoCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveHCaptcha(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -188,7 +204,9 @@ func TestSolveHCaptchaCapMonster(t *testing.T) {
 	}
 
 	captcha, err := SolveHCaptcha(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -230,7 +248,9 @@ func TestSolveImageCaptchaTwoCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveImageCaptcha(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -247,7 +267,9 @@ func TestSolveImageCaptchaAntiCaptcha(t *testing.T) {
 	}
 
 	captcha, err := SolveImageCaptcha(&payload)
-	checkError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Log(captcha.Solution)
 }
@@ -264,13 +286,9 @@ func TestSolveImageCaptchaCapMonster(t *testing.T) {
 	}
 
 	captcha, err := SolveImageCaptcha(&payload)
-	checkError(t, err)
-
-	t.Log(captcha.Solution)
-}
-
-func checkError(t *testing.T, err error) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Log(captcha.Solution)
 }
