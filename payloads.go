@@ -30,6 +30,15 @@ type RecaptchaV3Payload struct {
 	MinScore float32
 }
 
+type TurnstilePayload struct {
+	// EndpointUrl is the endpoint that has FunCaptcha Protection
+	EndpointUrl string
+
+	// EndpointKey is the Recaptcha Key
+	// Can be found on the Endpoint URL page
+	EndpointKey string
+}
+
 type ImageCaptchaPayload struct {
 	// Base64String is the base64 representation of the image
 	Base64String string

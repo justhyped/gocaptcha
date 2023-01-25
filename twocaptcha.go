@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 type TwoCaptcha struct {
@@ -117,6 +116,22 @@ func (t *TwoCaptcha) SolveHCaptcha(ctx context.Context, settings *Settings, payl
 	return result, nil
 }
 
+func (t *TwoCaptcha) SolveTurnstile(ctx context.Context, settings *Settings, payload *TurnstilePayload) (ICaptchaResponse, error) {
+	task := &url.Values{}
+	task.Set("method", "turnstile")
+	task.Set("sitekey", payload.EndpointKey)
+	task.Set("pageurl", payload.EndpointUrl)
+
+	result, err := t.solveTask(ctx, settings, task)
+	if err != nil {
+		return nil, err
+	}
+
+	result.reportGood = t.report("reportgood", result.taskId, settings)
+	result.reportBad = t.report("reportbad", result.taskId, settings)
+	return result, nil
+}
+
 func (t *TwoCaptcha) report(action, taskId string, settings *Settings) func(ctx context.Context) error {
 	type response struct {
 		Status    int    `json:"status"`
@@ -166,7 +181,7 @@ func (t *TwoCaptcha) solveTask(ctx context.Context, settings *Settings, task *ur
 		return nil, err
 	}
 
-	if err := internal.SleepContext(ctx, time.Duration(settings.initialWaitTime)*time.Second); err != nil {
+	if err := internal.SleepContext(ctx, settings.initialWaitTime); err != nil {
 		return nil, err
 	}
 
@@ -180,7 +195,7 @@ func (t *TwoCaptcha) solveTask(ctx context.Context, settings *Settings, task *ur
 			return &CaptchaResponse{solution: answer, taskId: taskId}, nil
 		}
 
-		if err := internal.SleepContext(ctx, time.Duration(settings.pollInterval)*time.Second); err != nil {
+		if err := internal.SleepContext(ctx, settings.pollInterval); err != nil {
 			return nil, err
 		}
 	}

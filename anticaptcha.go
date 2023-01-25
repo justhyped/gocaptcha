@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 type AntiCaptcha struct {
@@ -99,13 +98,28 @@ func (a *AntiCaptcha) SolveHCaptcha(ctx context.Context, settings *Settings, pay
 	return result, nil
 }
 
+func (a *AntiCaptcha) SolveTurnstile(ctx context.Context, settings *Settings, payload *TurnstilePayload) (ICaptchaResponse, error) {
+	task := map[string]any{
+		"type":       "TurnstileTaskProxyless",
+		"websiteURL": payload.EndpointUrl,
+		"websiteKey": payload.EndpointKey,
+	}
+
+	result, err := a.solveTask(ctx, settings, task)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task map[string]any) (*CaptchaResponse, error) {
 	taskId, err := a.createTask(ctx, settings, task)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := internal.SleepContext(ctx, time.Duration(settings.initialWaitTime)*time.Second); err != nil {
+	if err := internal.SleepContext(ctx, settings.initialWaitTime); err != nil {
 		return nil, err
 	}
 
@@ -119,7 +133,7 @@ func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task ma
 			return &CaptchaResponse{solution: answer, taskId: taskId}, nil
 		}
 
-		if err := internal.SleepContext(ctx, time.Duration(settings.pollInterval)*time.Second); err != nil {
+		if err := internal.SleepContext(ctx, settings.pollInterval); err != nil {
 			return nil, err
 		}
 	}

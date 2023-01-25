@@ -14,6 +14,9 @@ type IProvider interface {
 
 	// SolveHCaptcha is the implementation of getting the response of an HCaptcha captcha
 	SolveHCaptcha(ctx context.Context, settings *Settings, payload *HCaptchaPayload) (ICaptchaResponse, error)
+
+	// SolveTurnstile is the implementation of getting a turnstile token
+	SolveTurnstile(ctx context.Context, settings *Settings, payload *TurnstilePayload) (ICaptchaResponse, error)
 }
 
 type ICaptchaResponse interface {

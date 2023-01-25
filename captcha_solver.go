@@ -50,6 +50,14 @@ func (c *CaptchaSolver) SolveHCaptcha(ctx context.Context, payload *HCaptchaPayl
 	return c.provider.SolveHCaptcha(ctx, c.settings, payload)
 }
 
+// SolveTurnstile uses the provider to fetch the solution of a captcha.
+//
+// The function returns ICaptchaResponse that has .Solution(), .ReportBad() and .ReportGood() that can be used
+// to get the answer or report the quality of the captcha to the provider.
+func (c *CaptchaSolver) SolveTurnstile(ctx context.Context, payload *TurnstilePayload) (ICaptchaResponse, error) {
+	return c.provider.SolveTurnstile(ctx, c.settings, payload)
+}
+
 // SetClient will set the client that is used when interacting with APIs of providers.
 func (c *CaptchaSolver) SetClient(client *http.Client) {
 	c.settings.client = client
