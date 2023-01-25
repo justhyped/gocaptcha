@@ -16,3 +16,5 @@
 
 # environment files for unit tests
 *.env
+
+.idea
