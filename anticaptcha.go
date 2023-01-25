@@ -295,11 +295,11 @@ type CaptchaResponse struct {
 	reportBad  func(ctx context.Context) error
 }
 
-func (a CaptchaResponse) Solution() string {
+func (a *CaptchaResponse) Solution() string {
 	return a.solution
 }
 
-func (a CaptchaResponse) ReportBad(ctx context.Context) error {
+func (a *CaptchaResponse) ReportBad(ctx context.Context) error {
 	if a.isAlreadyReported {
 		return errors.New("already reported")
 	}
@@ -308,10 +308,16 @@ func (a CaptchaResponse) ReportBad(ctx context.Context) error {
 		return errors.New("not implemented for this captcha type")
 	}
 
-	return a.reportBad(ctx)
+	if err := a.reportBad(ctx); err != nil {
+		return err
+	}
+
+	a.isAlreadyReported = true
+
+	return nil
 }
 
-func (a CaptchaResponse) ReportGood(ctx context.Context) error {
+func (a *CaptchaResponse) ReportGood(ctx context.Context) error {
 	if a.isAlreadyReported {
 		return errors.New("already reported")
 	}
@@ -320,7 +326,13 @@ func (a CaptchaResponse) ReportGood(ctx context.Context) error {
 		return errors.New("not implemented for this captcha type")
 	}
 
-	return a.reportGood(ctx)
+	if err := a.reportGood(ctx); err != nil {
+		return err
+	}
+
+	a.isAlreadyReported = true
+
+	return nil
 }
 
 var _ IProvider = (*AntiCaptcha)(nil)
