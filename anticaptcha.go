@@ -2,382 +2,312 @@ package gocaptcha
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/justhyped/gocaptcha/internal"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func antiCaptchaSolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
-	var tries int
-
-	protocol := "http"
-	if payload.CustomServiceUrl == "" {
-		protocol = "https"
-		payload.CustomServiceUrl = "api.anti-captcha.com"
-	}
-
-	captchaResponse := payload.CreateRecaptchaResponse()
-
-	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
-	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
-
-	typeTask := map[string]interface{}{
-		"type":        "NoCaptchaTaskProxyless",
-		"websiteURL":  payload.EndpointUrl,
-		"websiteKey":  payload.EndpointKey,
-		"isInvisible": payload.IsInvisibleCaptcha}
-
-	createTask := map[string]interface{}{"clientKey": payload.ServiceApiKey, "task": typeTask}
-	jsonValue, _ := json.Marshal(createTask)
-
-	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	response, err := internal.ReadResponseBody(request)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	responseAsJSON := antiCaptchaCreateResponse{}
-	err = json.Unmarshal([]byte(response), &responseAsJSON)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	if responseAsJSON.ErrorID == 0 {
-		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
-	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-	}
-
-	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
-
-	resultData := map[string]string{"clientKey": payload.ServiceApiKey, "taskId": fmt.Sprint(captchaResponse.TaskId)}
-	jsonValue, _ = json.Marshal(resultData)
-
-	for captchaResponse.Solution == "" {
-		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		response, err := internal.ReadResponseBody(request)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		responseAsJSON := antiCaptchaResultResponse{}
-		err = json.Unmarshal([]byte(response), &responseAsJSON)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-		}
-
-		if responseAsJSON.Status == "ready" {
-			captchaResponse.Solution = responseAsJSON.Solution.RecaptchaResponse
-			return captchaResponse, nil
-		}
-
-		tries++
-		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
-		}
-		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
-	}
-
-	return &CaptchaResponse{}, errors.New("reached end of function")
+type AntiCaptcha struct {
+	baseUrl, apiKey string
 }
 
-func antiCaptchaSolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
-	var tries int
-
-	protocol := "http"
-	if payload.CustomServiceUrl == "" {
-		protocol = "https"
-		payload.CustomServiceUrl = "api.anti-captcha.com"
+func NewAntiCaptcha(apiKey string) *AntiCaptcha {
+	return &AntiCaptcha{
+		apiKey:  apiKey,
+		baseUrl: "https://api.anti-captcha.com",
 	}
-
-	captchaResponse := payload.CreateRecaptchaResponse()
-
-	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
-	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
-
-	typeTask := map[string]interface{}{
-		"type":       "RecaptchaV3TaskProxyless",
-		"websiteURL": payload.EndpointUrl,
-		"websiteKey": payload.EndpointKey,
-		"minScore":   0.3,
-	}
-
-	if payload.Action != "" {
-		typeTask["pageAction"] = payload.Action
-	}
-
-	if payload.IsEnterprise {
-		typeTask["isEnterprise"] = true
-	}
-
-	createTask := map[string]interface{}{"clientKey": payload.ServiceApiKey, "task": typeTask}
-	jsonValue, _ := json.Marshal(createTask)
-
-	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	response, err := internal.ReadResponseBody(request)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	responseAsJSON := antiCaptchaCreateResponse{}
-	err = json.Unmarshal([]byte(response), &responseAsJSON)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	if responseAsJSON.ErrorID == 0 {
-		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
-	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-	}
-
-	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
-
-	resultData := map[string]string{"clientKey": payload.ServiceApiKey, "taskId": fmt.Sprint(captchaResponse.TaskId)}
-	jsonValue, _ = json.Marshal(resultData)
-
-	for captchaResponse.Solution == "" {
-		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		response, err := internal.ReadResponseBody(request)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		responseAsJSON := antiCaptchaResultResponse{}
-		err = json.Unmarshal([]byte(response), &responseAsJSON)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-		}
-
-		if responseAsJSON.Status == "ready" {
-			captchaResponse.Solution = responseAsJSON.Solution.RecaptchaResponse
-			return captchaResponse, nil
-		}
-
-		tries++
-		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
-		}
-		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
-	}
-
-	return &CaptchaResponse{}, errors.New("reached end of function")
 }
 
-func antiCaptchaSolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
-	var tries int
-
-	protocol := "http"
-	if payload.CustomServiceUrl == "" {
-		protocol = "https"
-		payload.CustomServiceUrl = "api.anti-captcha.com"
+// NewCustomAntiCaptcha can be used to change the baseUrl, some providers such as CapMonster, XEVil and CapSolver
+// have the exact same API as AntiCaptcha, thus allowing you to use these providers with ease.
+func NewCustomAntiCaptcha(baseUrl, apiKey string) *AntiCaptcha {
+	return &AntiCaptcha{
+		baseUrl: baseUrl,
+		apiKey:  apiKey,
 	}
+}
 
-	captchaResponse := payload.CreateImageCaptchaResponse()
-
-	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
-	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
-
-	typeTask := map[string]interface{}{
+func (a *AntiCaptcha) SolveImageCaptcha(ctx context.Context, settings *Settings, payload *ImageCaptchaPayload) (ICaptchaResponse, error) {
+	task := map[string]any{
 		"type": "ImageToTextTask",
 		"body": payload.Base64String,
 		"case": payload.CaseSensitive,
 	}
 
-	createTask := map[string]interface{}{"clientKey": payload.ServiceApiKey, "task": typeTask}
-	jsonValue, _ := json.Marshal(createTask)
-
-	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
+	result, err := a.solveTask(ctx, settings, task)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return nil, err
 	}
 
-	response, err := internal.ReadResponseBody(request)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	responseAsJSON := antiCaptchaCreateResponse{}
-	err = json.Unmarshal([]byte(response), &responseAsJSON)
-	if err != nil {
-		return &CaptchaResponse{}, err
-	}
-
-	if responseAsJSON.ErrorID == 0 {
-		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
-	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-	}
-
-	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
-
-	resultData := map[string]string{"clientKey": payload.ServiceApiKey, "taskId": fmt.Sprint(captchaResponse.TaskId)}
-	jsonValue, _ = json.Marshal(resultData)
-
-	for captchaResponse.Solution == "" {
-		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		response, err := internal.ReadResponseBody(request)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		responseAsJSON := antiCaptchaResultResponse{}
-		err = json.Unmarshal([]byte(response), &responseAsJSON)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-		}
-
-		if responseAsJSON.Status == "ready" {
-			captchaResponse.Solution = responseAsJSON.Solution.Text
-			return captchaResponse, nil
-		}
-
-		tries++
-		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
-		}
-		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
-	}
-
-	return &CaptchaResponse{}, errors.New("reached end of function")
+	result.reportBad = a.report("/reportIncorrectImageCaptcha", result.taskId, settings)
+	return result, nil
 }
 
-func antiCaptchaSolveHCaptcha(payload *HCaptchaPayload) (*CaptchaResponse, error) {
-	var tries int
+func (a *AntiCaptcha) SolveRecaptchaV2(ctx context.Context, settings *Settings, payload *RecaptchaV2Payload) (ICaptchaResponse, error) {
+	task := map[string]any{
+		"type":        "NoCaptchaTaskProxyless",
+		"websiteURL":  payload.EndpointUrl,
+		"websiteKey":  payload.EndpointKey,
+		"isInvisible": payload.IsInvisibleCaptcha}
 
-	protocol := "http"
-	if payload.CustomServiceUrl == "" {
-		protocol = "https"
-		payload.CustomServiceUrl = "api.anti-captcha.com"
+	result, err := a.solveTask(ctx, settings, task)
+	if err != nil {
+		return nil, err
 	}
 
-	captchaResponse := payload.CreateHCaptchaResponse()
+	result.reportBad = a.report("/reportIncorrectRecaptcha", result.taskId, settings)
+	result.reportGood = a.report("/reportCorrectRecaptcha", result.taskId, settings)
+	return result, nil
+}
 
-	createTaskUrl := fmt.Sprintf("%v://%v/createTask", protocol, payload.CustomServiceUrl)
-	getTaskUrl := fmt.Sprintf("%v://%v/getTaskResult", protocol, payload.CustomServiceUrl)
+func (a *AntiCaptcha) SolveRecaptchaV3(ctx context.Context, settings *Settings, payload *RecaptchaV3Payload) (ICaptchaResponse, error) {
+	task := map[string]any{
+		"type":       "RecaptchaV3TaskProxyless",
+		"websiteURL": payload.EndpointUrl,
+		"websiteKey": payload.EndpointKey,
+		"minScore":   payload.MinScore,
+	}
 
-	typeTask := map[string]interface{}{
+	result, err := a.solveTask(ctx, settings, task)
+	if err != nil {
+		return nil, err
+	}
+
+	result.reportBad = a.report("/reportIncorrectRecaptcha", result.taskId, settings)
+	result.reportGood = a.report("/reportCorrectRecaptcha", result.taskId, settings)
+	return result, nil
+}
+
+func (a *AntiCaptcha) SolveHCaptcha(ctx context.Context, settings *Settings, payload *HCaptchaPayload) (ICaptchaResponse, error) {
+	task := map[string]any{
 		"type":       "HCaptchaTaskProxyless",
 		"websiteURL": payload.EndpointUrl,
 		"websiteKey": payload.EndpointKey,
 	}
 
-	createTask := map[string]interface{}{"clientKey": payload.ServiceApiKey, "task": typeTask}
-	jsonValue, _ := json.Marshal(createTask)
-
-	request, err := http.Post(createTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
+	result, err := a.solveTask(ctx, settings, task)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return nil, err
 	}
 
-	response, err := internal.ReadResponseBody(request)
+	return result, nil
+}
+
+func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task map[string]any) (*CaptchaResponse, error) {
+	taskId, err := a.createTask(ctx, settings, task)
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return nil, err
 	}
 
-	responseAsJSON := antiCaptchaCreateResponse{}
-	err = json.Unmarshal([]byte(response), &responseAsJSON)
+	if err := internal.SleepContext(ctx, time.Duration(settings.initialWaitTime)*time.Second); err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < settings.maxRetries; i++ {
+		answer, err := a.getTaskResult(ctx, settings, taskId)
+		if err != nil {
+			return nil, err
+		}
+
+		if answer != "" {
+			return &CaptchaResponse{solution: answer, taskId: taskId}, nil
+		}
+
+		if err := internal.SleepContext(ctx, time.Duration(settings.pollInterval)*time.Second); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, errors.New("max tries exceeded")
+}
+
+func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task map[string]any) (string, error) {
+	type antiCaptchaCreateResponse struct {
+		ErrorID          int    `json:"errorId"`
+		ErrorDescription string `json:"errorDescription"`
+		TaskID           int    `json:"taskId"`
+	}
+
+	jsonValue, err := json.Marshal(map[string]any{"clientKey": a.apiKey, "task": task})
 	if err != nil {
-		return &CaptchaResponse{}, err
+		return "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+"/createTask", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("content-type", "application/json")
+
+	resp, err := settings.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var responseAsJSON antiCaptchaCreateResponse
+	err = json.Unmarshal(respBody, &responseAsJSON)
+	if err != nil {
+		return "", err
 	}
 
 	if responseAsJSON.ErrorID == 0 {
-		captchaResponse.TaskId = strconv.Itoa(responseAsJSON.TaskID)
+		return strconv.Itoa(responseAsJSON.TaskID), nil
 	} else {
-		return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
+		return "", errors.New(responseAsJSON.ErrorDescription)
+	}
+}
+
+func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, taskId string) (string, error) {
+	type antiCapSolution struct {
+		RecaptchaResponse string `json:"gRecaptchaResponse"`
+		Text              string `json:"text"`
 	}
 
-	time.Sleep(time.Duration(payload.InitialWaitTime) * time.Second)
-
-	resultData := map[string]string{"clientKey": payload.ServiceApiKey, "taskId": fmt.Sprint(captchaResponse.TaskId)}
-	jsonValue, _ = json.Marshal(resultData)
-
-	for captchaResponse.Solution == "" {
-		request, err := http.Post(getTaskUrl, "application/json", bytes.NewBuffer(jsonValue))
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		response, err := internal.ReadResponseBody(request)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		responseAsJSON := antiCaptchaResultResponse{}
-		err = json.Unmarshal([]byte(response), &responseAsJSON)
-		if err != nil {
-			return &CaptchaResponse{}, err
-		}
-
-		if responseAsJSON.ErrorID != 0 {
-			return &CaptchaResponse{}, errors.New(responseAsJSON.ErrorDescription)
-		}
-
-		if responseAsJSON.Status == "ready" {
-			captchaResponse.Solution = responseAsJSON.Solution.RecaptchaResponse
-			return captchaResponse, nil
-		}
-
-		tries++
-		if tries == payload.MaxRetries {
-			return &CaptchaResponse{}, errors.New("captcha took longer than 115 seconds to solve")
-		}
-		time.Sleep(time.Duration(payload.PollInterval) * time.Second)
+	type resultResponse struct {
+		Status           string          `json:"status"`
+		ErrorID          int             `json:"errorId"`
+		ErrorDescription string          `json:"errorDescription"`
+		Solution         antiCapSolution `json:"solution"`
 	}
 
-	return &CaptchaResponse{}, errors.New("reached end of function")
+	resultData := map[string]string{"clientKey": a.apiKey, "taskId": taskId}
+	jsonValue, err := json.Marshal(resultData)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.baseUrl+"/getTaskResult", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := settings.client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var respJson resultResponse
+	if err := json.Unmarshal(respBody, &respJson); err != nil {
+		return "", err
+	}
+
+	if respJson.ErrorID != 0 {
+		return "", errors.New(respJson.ErrorDescription)
+	}
+
+	if respJson.Status == "ready" {
+		if respJson.Solution.Text != "" {
+			return respJson.Solution.Text, nil
+		}
+
+		if respJson.Solution.RecaptchaResponse != "" {
+			return respJson.Solution.RecaptchaResponse, nil
+		}
+	}
+
+	return "", nil
 }
 
-type antiCaptchaCreateResponse struct {
-	ErrorID          int    `json:"errorId"`
-	ErrorDescription string `json:"errorDescription"`
-	TaskID           int    `json:"taskId"`
+func (a *AntiCaptcha) report(path, taskId string, settings *Settings) func(ctx context.Context) error {
+	type response struct {
+		ErrorID          int64  `json:"errorId"`
+		ErrorCode        string `json:"errorCode"`
+		ErrorDescription string `json:"errorDescription"`
+	}
+
+	return func(ctx context.Context) error {
+		payload := map[string]string{
+			"clientKey": a.apiKey,
+			"taskId":    taskId,
+		}
+		rawPayload, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+path, bytes.NewBuffer(rawPayload))
+		if err != nil {
+			return err
+		}
+
+		resp, err := settings.client.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		respBody, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		var respJson response
+		if err := json.Unmarshal(respBody, &respJson); err != nil {
+			return err
+		}
+
+		if respJson.ErrorID != 0 {
+			return fmt.Errorf("%v: %v", respJson.ErrorCode, respJson.ErrorDescription)
+		}
+
+		return nil
+	}
 }
 
-type antiCaptchaResultResponse struct {
-	Status           string          `json:"status"`
-	ErrorID          int             `json:"errorId"`
-	ErrorDescription string          `json:"errorDescription"`
-	Solution         antiCapSolution `json:"solution"`
+type CaptchaResponse struct {
+	solution, taskId  string
+	isAlreadyReported bool
+
+	// these are set internally for each captcha type
+	reportGood func(ctx context.Context) error
+	reportBad  func(ctx context.Context) error
 }
 
-type antiCapSolution struct {
-	RecaptchaResponse string `json:"gRecaptchaResponse"`
-	Text              string `json:"text"`
+func (a CaptchaResponse) Solution() string {
+	return a.solution
 }
+
+func (a CaptchaResponse) ReportBad(ctx context.Context) error {
+	if a.isAlreadyReported {
+		return errors.New("already reported")
+	}
+
+	if a.reportBad == nil {
+		return errors.New("not implemented for this captcha type")
+	}
+
+	return a.reportBad(ctx)
+}
+
+func (a CaptchaResponse) ReportGood(ctx context.Context) error {
+	if a.isAlreadyReported {
+		return errors.New("already reported")
+	}
+
+	if a.reportGood == nil {
+		return errors.New("not implemented for this captcha type")
+	}
+
+	return a.reportGood(ctx)
+}
+
+var _ IProvider = (*AntiCaptcha)(nil)
+var _ ICaptchaResponse = (*CaptchaResponse)(nil)

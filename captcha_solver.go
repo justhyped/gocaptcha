@@ -1,89 +1,54 @@
 package gocaptcha
 
 import (
-	"errors"
+	"context"
+	"net/http"
 )
 
-// SolveImageCaptcha solves an image captcha
-func SolveImageCaptcha(payload *ImageCaptchaPayload) (*CaptchaResponse, error) {
-	payload.SetDefaultValues()
-
-	imageSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
-
-	switch payload.ServiceName {
-	case "2Captcha":
-		imageSolution, err = twoCaptchaSolveImageCaptcha(payload)
-	case "AntiCaptcha":
-		imageSolution, err = antiCaptchaSolveImageCaptcha(payload)
-	case "CapMonster Cloud":
-		// CapMonster Cloud has the same api
-		// as AntiCaptcha so we just alter the api endpoint
-		payload.CustomServiceUrl = "api.capmonster.cloud"
-		imageSolution, err = antiCaptchaSolveImageCaptcha(payload)
-	}
-
-	return imageSolution, err
+type CaptchaSolver struct {
+	provider IProvider
+	settings *Settings
 }
 
-// SolveRecaptchaV2 solves recaptcha V2
-func SolveRecaptchaV2(payload *RecaptchaV2Payload) (*CaptchaResponse, error) {
-	payload.SetDefaultValues()
-
-	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
-
-	switch payload.ServiceName {
-	case "2Captcha":
-		captchaSolution, err = twoCaptchaSolveRecaptchaV2(payload)
-	case "AntiCaptcha":
-		captchaSolution, err = antiCaptchaSolveRecaptchaV2(payload)
-	case "CapMonster Cloud":
-		// CapMonster Cloud has the same api
-		// as AntiCaptcha so we just alter the api endpoint
-		payload.CustomServiceUrl = "api.capmonster.cloud"
-		captchaSolution, err = antiCaptchaSolveRecaptchaV2(payload)
+func NewCaptchaSolver(provider IProvider) *CaptchaSolver {
+	return &CaptchaSolver{
+		settings: NewSettings(),
+		provider: provider,
 	}
-
-	return captchaSolution, err
 }
 
-// SolveRecaptchaV3 solves recaptcha V3
-func SolveRecaptchaV3(payload *RecaptchaV3Payload) (*CaptchaResponse, error) {
-	payload.SetDefaultValues()
-
-	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
-
-	switch payload.ServiceName {
-	case "2Captcha":
-		captchaSolution, err = twoCaptchaSolveRecaptchaV3(payload)
-	case "AntiCaptcha":
-		captchaSolution, err = antiCaptchaSolveRecaptchaV3(payload)
-	case "CapMonster Cloud":
-		// CapMonster Cloud has the same api
-		// as AntiCaptcha so we just alter the api endpoint
-		payload.CustomServiceUrl = "api.capmonster.cloud"
-		captchaSolution, err = antiCaptchaSolveRecaptchaV3(payload)
-	}
-
-	return captchaSolution, err
+func (c *CaptchaSolver) SolveImageCaptcha(ctx context.Context, payload *ImageCaptchaPayload) (ICaptchaResponse, error) {
+	return c.provider.SolveImageCaptcha(ctx, c.settings, payload)
 }
 
-// SolveHCaptcha solves hCaptcha
-func SolveHCaptcha(payload *HCaptchaPayload) (*CaptchaResponse, error) {
-	payload.SetDefaultValues()
+func (c *CaptchaSolver) SolveRecaptchaV2(ctx context.Context, payload *RecaptchaV2Payload) (ICaptchaResponse, error) {
+	return c.provider.SolveRecaptchaV2(ctx, c.settings, payload)
+}
 
-	captchaSolution, err := &CaptchaResponse{}, errors.New("unsupported captcha service")
+func (c *CaptchaSolver) SolveRecaptchaV3(ctx context.Context, payload *RecaptchaV3Payload) (ICaptchaResponse, error) {
+	return c.provider.SolveRecaptchaV3(ctx, c.settings, payload)
+}
 
-	switch payload.ServiceName {
-	case "2Captcha":
-		captchaSolution, err = twoCaptchaSolveHCaptcha(payload)
-	case "AntiCaptcha":
-		captchaSolution, err = antiCaptchaSolveHCaptcha(payload)
-	case "CapMonster Cloud":
-		// CapMonster Cloud has the same api
-		// as AntiCaptcha so we just alter the api endpoint
-		payload.CustomServiceUrl = "api.capmonster.cloud"
-		captchaSolution, err = antiCaptchaSolveHCaptcha(payload)
-	}
+func (c *CaptchaSolver) SolveHCaptcha(ctx context.Context, payload *HCaptchaPayload) (ICaptchaResponse, error) {
+	return c.provider.SolveHCaptcha(ctx, c.settings, payload)
+}
 
-	return captchaSolution, err
+// SetClient will set the client that is used when interacting with APIs of providers.
+func (c *CaptchaSolver) SetClient(client *http.Client) {
+	c.settings.client = client
+}
+
+// SetInitialWaitTime sets the time in seconds that is being waited after submitting a task to a provider before polling
+func (c *CaptchaSolver) SetInitialWaitTime(waitTime int) {
+	c.settings.initialWaitTime = waitTime
+}
+
+// SetPollInterval sets the time in seconds that is being waited in between result polls
+func (c *CaptchaSolver) SetPollInterval(interval int) {
+	c.settings.pollInterval = interval
+}
+
+// SetMaxRetries sets the maximum amount of polling
+func (c *CaptchaSolver) SetMaxRetries(maxRetries int) {
+	c.settings.maxRetries = maxRetries
 }
