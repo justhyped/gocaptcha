@@ -1,7 +1,3 @@
 module github.com/justhyped/gocaptcha
 
-go 1.19
-
-require (
-	github.com/joho/godotenv v1.4.0
-)
+go 1.20
