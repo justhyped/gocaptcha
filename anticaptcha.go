@@ -145,7 +145,7 @@ func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task m
 	type antiCaptchaCreateResponse struct {
 		ErrorID          int    `json:"errorId"`
 		ErrorDescription string `json:"errorDescription"`
-		TaskID           int    `json:"taskId"`
+		TaskID           any    `json:"taskId"`
 	}
 
 	jsonValue, err := json.Marshal(map[string]any{"clientKey": a.apiKey, "task": task})
@@ -171,13 +171,22 @@ func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task m
 	}
 
 	var responseAsJSON antiCaptchaCreateResponse
-	err = json.Unmarshal(respBody, &responseAsJSON)
-	if err != nil {
+	if err := json.Unmarshal(respBody, &responseAsJSON); err != nil {
 		return "", err
 	}
 
 	if responseAsJSON.ErrorID == 0 {
-		return strconv.Itoa(responseAsJSON.TaskID), nil
+		switch responseAsJSON.TaskID.(type) {
+		case string:
+			// taskId is a string with CapSolver
+			return responseAsJSON.TaskID.(string), nil
+		case float64:
+			// taskId is a float64 with AntiCaptcha
+			return strconv.FormatFloat(responseAsJSON.TaskID.(float64), 'f', 0, 64), nil
+		}
+
+		// if you encounter this error with a custom provider, please open an issue
+		return "", errors.New("unexpected taskId type, expecting string or float64")
 	} else {
 		return "", errors.New(responseAsJSON.ErrorDescription)
 	}
@@ -202,7 +211,7 @@ func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, tas
 		return "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.baseUrl+"/getTaskResult", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+"/getTaskResult", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		return "", err
 	}

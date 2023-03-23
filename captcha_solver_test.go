@@ -4,26 +4,25 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 )
 
 func TestNewCaptchaSolver(t *testing.T) {
 	ctx := context.Background()
 
-	cs := NewCaptchaSolver(NewAntiCaptcha("test"))
+	cs := NewCaptchaSolver(NewCustomAntiCaptcha("https://api.capsolver.com", "key"))
 	cs.SetClient(http.DefaultClient)
-	cs.SetInitialWaitTime(10)
+	cs.SetInitialWaitTime(10 * time.Second)
 	cs.SetMaxRetries(5)
-	cs.SetPollInterval(20)
+	cs.SetPollInterval(20 * time.Second)
 
 	resp, err := cs.SolveRecaptchaV2(ctx, &RecaptchaV2Payload{
-		EndpointUrl: "",
-		EndpointKey: "",
+		EndpointUrl: "https://www.google.com/recaptcha/api2/demo",
+		EndpointKey: "6Le-wvkSAAAAAPBMRTvw0Q4Muexq9bi0DJwx_mJ-",
 	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	resp.Solution() // gets the answer or recaptcha token etc
-	_ = resp.ReportBad(ctx)
-	_ = resp.ReportGood(ctx)
+	t.Log(resp.Solution()) // gets the answer or recaptcha token etc
 }

@@ -3,12 +3,13 @@ package gocaptcha
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestNewTwoCaptcha(t *testing.T) {
 	cs := NewCaptchaSolver(NewTwoCaptcha("key"))
-	cs.SetPollInterval(1)
-	cs.SetInitialWaitTime(1)
+	cs.SetPollInterval(1 * time.Second)
+	cs.SetInitialWaitTime(1 * time.Second)
 
 	resp, err := cs.SolveRecaptchaV2(context.Background(), &RecaptchaV2Payload{
 		EndpointUrl: "https://www.google.com/recaptcha/api2/demo",
