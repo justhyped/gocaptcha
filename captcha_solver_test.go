@@ -2,19 +2,13 @@ package gocaptcha
 
 import (
 	"context"
-	"net/http"
 	"testing"
-	"time"
 )
 
 func TestNewCaptchaSolver(t *testing.T) {
 	ctx := context.Background()
 
-	cs := NewCaptchaSolver(NewCustomAntiCaptcha("https://api.capsolver.com", "key"))
-	cs.SetClient(http.DefaultClient)
-	cs.SetInitialWaitTime(10 * time.Second)
-	cs.SetMaxRetries(5)
-	cs.SetPollInterval(20 * time.Second)
+	cs := NewCaptchaSolver(NewCustomAntiCaptcha("https://api.capmonster.cloud", "key"))
 
 	resp, err := cs.SolveRecaptchaV2(ctx, &RecaptchaV2Payload{
 		EndpointUrl: "https://www.google.com/recaptcha/api2/demo",

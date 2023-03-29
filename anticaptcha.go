@@ -23,6 +23,13 @@ func NewAntiCaptcha(apiKey string) *AntiCaptcha {
 	}
 }
 
+func NewCapMonsterCloud(apiKey string) *AntiCaptcha {
+	return &AntiCaptcha{
+		apiKey:  apiKey,
+		baseUrl: "https://api.capmonster.cloud",
+	}
+}
+
 // NewCustomAntiCaptcha can be used to change the baseUrl, some providers such as CapMonster, XEVil and CapSolver
 // have the exact same API as AntiCaptcha, thus allowing you to use these providers with ease.
 func NewCustomAntiCaptcha(baseUrl, apiKey string) *AntiCaptcha {

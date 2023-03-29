@@ -22,6 +22,7 @@ using the `IProvider` interface.
 - [2Captcha](https://github.com/justhyped/gocaptcha/blob/main/examples/twocaptcha/main.go)
 - [2Captcha (with custom domain)](https://github.com/justhyped/gocaptcha/blob/main/examples/twocaptcha_custom/main.go)
 - [AntiCaptcha](https://github.com/justhyped/gocaptcha/blob/main/examples/anticaptcha_custom/main.go)
+- [CapMonster Cloud](https://github.com/justhyped/gocaptcha/blob/main/examples/capmonster_cloud/main.go)
 - [AntiCaptcha (with custom domain)](https://github.com/justhyped/gocaptcha/blob/main/examples/anticaptcha_custom/main.go)
 - [Custom provider](https://github.com/justhyped/gocaptcha/blob/main/examples/custom_provider/main.go)
 
