@@ -13,7 +13,8 @@ import (
 )
 
 type AntiCaptcha struct {
-	baseUrl, apiKey string
+	baseUrl string
+	apiKey  string
 }
 
 func NewAntiCaptcha(apiKey string) *AntiCaptcha {
@@ -126,7 +127,7 @@ func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task ma
 		return nil, err
 	}
 
-	if err := internal.SleepContext(ctx, settings.initialWaitTime); err != nil {
+	if err := internal.SleepWithContext(ctx, settings.initialWaitTime); err != nil {
 		return nil, err
 	}
 
@@ -140,7 +141,7 @@ func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task ma
 			return &CaptchaResponse{solution: answer, taskId: taskId}, nil
 		}
 
-		if err := internal.SleepContext(ctx, settings.pollInterval); err != nil {
+		if err := internal.SleepWithContext(ctx, settings.pollInterval); err != nil {
 			return nil, err
 		}
 	}
@@ -182,21 +183,21 @@ func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task m
 		return "", err
 	}
 
-	if responseAsJSON.ErrorID == 0 {
-		switch responseAsJSON.TaskID.(type) {
-		case string:
-			// taskId is a string with CapSolver
-			return responseAsJSON.TaskID.(string), nil
-		case float64:
-			// taskId is a float64 with AntiCaptcha
-			return strconv.FormatFloat(responseAsJSON.TaskID.(float64), 'f', 0, 64), nil
-		}
-
-		// if you encounter this error with a custom provider, please open an issue
-		return "", errors.New("unexpected taskId type, expecting string or float64")
-	} else {
+	if responseAsJSON.ErrorID != 0 {
 		return "", errors.New(responseAsJSON.ErrorDescription)
 	}
+
+	switch responseAsJSON.TaskID.(type) {
+	case string:
+		// taskId is a string with CapSolver
+		return responseAsJSON.TaskID.(string), nil
+	case float64:
+		// taskId is a float64 with AntiCaptcha
+		return strconv.FormatFloat(responseAsJSON.TaskID.(float64), 'f', 0, 64), nil
+	}
+
+	// if you encounter this error with a custom provider, please open an issue
+	return "", errors.New("unexpected taskId type, expecting string or float64")
 }
 
 func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, taskId string) (string, error) {
@@ -243,14 +244,16 @@ func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, tas
 		return "", errors.New(respJson.ErrorDescription)
 	}
 
-	if respJson.Status == "ready" {
-		if respJson.Solution.Text != "" {
-			return respJson.Solution.Text, nil
-		}
+	if respJson.Status != "ready" {
+		return "", nil
+	}
 
-		if respJson.Solution.RecaptchaResponse != "" {
-			return respJson.Solution.RecaptchaResponse, nil
-		}
+	if respJson.Solution.Text != "" {
+		return respJson.Solution.Text, nil
+	}
+
+	if respJson.Solution.RecaptchaResponse != "" {
+		return respJson.Solution.RecaptchaResponse, nil
 	}
 
 	return "", nil
@@ -302,54 +305,4 @@ func (a *AntiCaptcha) report(path, taskId string, settings *Settings) func(ctx c
 	}
 }
 
-type CaptchaResponse struct {
-	solution, taskId  string
-	isAlreadyReported bool
-
-	// these are set internally for each captcha type
-	reportGood func(ctx context.Context) error
-	reportBad  func(ctx context.Context) error
-}
-
-func (a *CaptchaResponse) Solution() string {
-	return a.solution
-}
-
-func (a *CaptchaResponse) ReportBad(ctx context.Context) error {
-	if a.isAlreadyReported {
-		return errors.New("already reported")
-	}
-
-	if a.reportBad == nil {
-		return errors.New("not implemented for this captcha type")
-	}
-
-	if err := a.reportBad(ctx); err != nil {
-		return err
-	}
-
-	a.isAlreadyReported = true
-
-	return nil
-}
-
-func (a *CaptchaResponse) ReportGood(ctx context.Context) error {
-	if a.isAlreadyReported {
-		return errors.New("already reported")
-	}
-
-	if a.reportGood == nil {
-		return errors.New("not implemented for this captcha type")
-	}
-
-	if err := a.reportGood(ctx); err != nil {
-		return err
-	}
-
-	a.isAlreadyReported = true
-
-	return nil
-}
-
 var _ IProvider = (*AntiCaptcha)(nil)
-var _ ICaptchaResponse = (*CaptchaResponse)(nil)

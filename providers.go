@@ -18,14 +18,3 @@ type IProvider interface {
 	// SolveTurnstile is the implementation of getting a turnstile token
 	SolveTurnstile(ctx context.Context, settings *Settings, payload *TurnstilePayload) (ICaptchaResponse, error)
 }
-
-type ICaptchaResponse interface {
-	// Solution will return the solution of the captcha as a string
-	Solution() string
-
-	// ReportBad reports the captcha to be invalid if the provider and captcha type support it.
-	ReportBad(ctx context.Context) error
-
-	// ReportGood reports the captcha to be valid if the provider and captcha type support it.
-	ReportGood(ctx context.Context) error
-}

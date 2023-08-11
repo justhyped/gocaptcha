@@ -13,7 +13,8 @@ import (
 )
 
 type TwoCaptcha struct {
-	baseUrl, apiKey string
+	baseUrl string
+	apiKey  string
 }
 
 func NewTwoCaptcha(apiKey string) *TwoCaptcha {
@@ -181,7 +182,7 @@ func (t *TwoCaptcha) solveTask(ctx context.Context, settings *Settings, task *ur
 		return nil, err
 	}
 
-	if err := internal.SleepContext(ctx, settings.initialWaitTime); err != nil {
+	if err := internal.SleepWithContext(ctx, settings.initialWaitTime); err != nil {
 		return nil, err
 	}
 
@@ -195,7 +196,7 @@ func (t *TwoCaptcha) solveTask(ctx context.Context, settings *Settings, task *ur
 			return &CaptchaResponse{solution: answer, taskId: taskId}, nil
 		}
 
-		if err := internal.SleepContext(ctx, settings.pollInterval); err != nil {
+		if err := internal.SleepWithContext(ctx, settings.pollInterval); err != nil {
 			return nil, err
 		}
 	}

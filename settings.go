@@ -6,9 +6,10 @@ import (
 )
 
 type Settings struct {
-	client                        *http.Client
-	initialWaitTime, pollInterval time.Duration
-	maxRetries                    int
+	client          *http.Client
+	initialWaitTime time.Duration
+	pollInterval    time.Duration
+	maxRetries      int
 }
 
 func NewSettings() *Settings {
