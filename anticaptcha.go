@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/justhyped/gocaptcha/internal"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/justhyped/gocaptcha/internal"
 )
 
 type AntiCaptcha struct {
@@ -31,6 +32,13 @@ func NewCapMonsterCloud(apiKey string) *AntiCaptcha {
 	}
 }
 
+func NewCapSolver(apiKey string) *AntiCaptcha {
+	return &AntiCaptcha{
+		apiKey:  apiKey,
+		baseUrl: "https://api.capsolver.com",
+	}
+}
+
 // NewCustomAntiCaptcha can be used to change the baseUrl, some providers such as CapMonster, XEVil and CapSolver
 // have the exact same API as AntiCaptcha, thus allowing you to use these providers with ease.
 func NewCustomAntiCaptcha(baseUrl, apiKey string) *AntiCaptcha {
@@ -40,7 +48,11 @@ func NewCustomAntiCaptcha(baseUrl, apiKey string) *AntiCaptcha {
 	}
 }
 
-func (a *AntiCaptcha) SolveImageCaptcha(ctx context.Context, settings *Settings, payload *ImageCaptchaPayload) (ICaptchaResponse, error) {
+func (a *AntiCaptcha) SolveImageCaptcha(
+	ctx context.Context,
+	settings *Settings,
+	payload *ImageCaptchaPayload,
+) (ICaptchaResponse, error) {
 	task := map[string]any{
 		"type": "ImageToTextTask",
 		"body": payload.Base64String,
@@ -56,7 +68,11 @@ func (a *AntiCaptcha) SolveImageCaptcha(ctx context.Context, settings *Settings,
 	return result, nil
 }
 
-func (a *AntiCaptcha) SolveRecaptchaV2(ctx context.Context, settings *Settings, payload *RecaptchaV2Payload) (ICaptchaResponse, error) {
+func (a *AntiCaptcha) SolveRecaptchaV2(
+	ctx context.Context,
+	settings *Settings,
+	payload *RecaptchaV2Payload,
+) (ICaptchaResponse, error) {
 	task := map[string]any{
 		"type":        "NoCaptchaTaskProxyless",
 		"websiteURL":  payload.EndpointUrl,
@@ -73,7 +89,11 @@ func (a *AntiCaptcha) SolveRecaptchaV2(ctx context.Context, settings *Settings, 
 	return result, nil
 }
 
-func (a *AntiCaptcha) SolveRecaptchaV3(ctx context.Context, settings *Settings, payload *RecaptchaV3Payload) (ICaptchaResponse, error) {
+func (a *AntiCaptcha) SolveRecaptchaV3(
+	ctx context.Context,
+	settings *Settings,
+	payload *RecaptchaV3Payload,
+) (ICaptchaResponse, error) {
 	task := map[string]any{
 		"type":       "RecaptchaV3TaskProxyless",
 		"websiteURL": payload.EndpointUrl,
@@ -91,7 +111,11 @@ func (a *AntiCaptcha) SolveRecaptchaV3(ctx context.Context, settings *Settings, 
 	return result, nil
 }
 
-func (a *AntiCaptcha) SolveHCaptcha(ctx context.Context, settings *Settings, payload *HCaptchaPayload) (ICaptchaResponse, error) {
+func (a *AntiCaptcha) SolveHCaptcha(
+	ctx context.Context,
+	settings *Settings,
+	payload *HCaptchaPayload,
+) (ICaptchaResponse, error) {
 	task := map[string]any{
 		"type":       "HCaptchaTaskProxyless",
 		"websiteURL": payload.EndpointUrl,
@@ -106,7 +130,11 @@ func (a *AntiCaptcha) SolveHCaptcha(ctx context.Context, settings *Settings, pay
 	return result, nil
 }
 
-func (a *AntiCaptcha) SolveTurnstile(ctx context.Context, settings *Settings, payload *TurnstilePayload) (ICaptchaResponse, error) {
+func (a *AntiCaptcha) SolveTurnstile(
+	ctx context.Context,
+	settings *Settings,
+	payload *TurnstilePayload,
+) (ICaptchaResponse, error) {
 	task := map[string]any{
 		"type":       "TurnstileTaskProxyless",
 		"websiteURL": payload.EndpointUrl,
@@ -121,7 +149,11 @@ func (a *AntiCaptcha) SolveTurnstile(ctx context.Context, settings *Settings, pa
 	return result, nil
 }
 
-func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task map[string]any) (*CaptchaResponse, error) {
+func (a *AntiCaptcha) solveTask(
+	ctx context.Context,
+	settings *Settings,
+	task map[string]any,
+) (*CaptchaResponse, error) {
 	taskId, err := a.createTask(ctx, settings, task)
 	if err != nil {
 		return nil, err
@@ -149,7 +181,11 @@ func (a *AntiCaptcha) solveTask(ctx context.Context, settings *Settings, task ma
 	return nil, errors.New("max tries exceeded")
 }
 
-func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task map[string]any) (string, error) {
+func (a *AntiCaptcha) createTask(
+	ctx context.Context,
+	settings *Settings,
+	task map[string]any,
+) (string, error) {
 	type antiCaptchaCreateResponse struct {
 		ErrorID          int    `json:"errorId"`
 		ErrorDescription string `json:"errorDescription"`
@@ -161,7 +197,12 @@ func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task m
 		return "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+"/createTask", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		a.baseUrl+"/createTask",
+		bytes.NewBuffer(jsonValue),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -200,7 +241,11 @@ func (a *AntiCaptcha) createTask(ctx context.Context, settings *Settings, task m
 	return "", errors.New("unexpected taskId type, expecting string or float64")
 }
 
-func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, taskId string) (string, error) {
+func (a *AntiCaptcha) getTaskResult(
+	ctx context.Context,
+	settings *Settings,
+	taskId string,
+) (string, error) {
 	type antiCapSolution struct {
 		RecaptchaResponse string `json:"gRecaptchaResponse"`
 		Text              string `json:"text"`
@@ -219,7 +264,12 @@ func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, tas
 		return "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+"/getTaskResult", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		a.baseUrl+"/getTaskResult",
+		bytes.NewBuffer(jsonValue),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -259,7 +309,10 @@ func (a *AntiCaptcha) getTaskResult(ctx context.Context, settings *Settings, tas
 	return "", nil
 }
 
-func (a *AntiCaptcha) report(path, taskId string, settings *Settings) func(ctx context.Context) error {
+func (a *AntiCaptcha) report(
+	path, taskId string,
+	settings *Settings,
+) func(ctx context.Context) error {
 	type response struct {
 		ErrorID          int64  `json:"errorId"`
 		ErrorCode        string `json:"errorCode"`
@@ -276,7 +329,12 @@ func (a *AntiCaptcha) report(path, taskId string, settings *Settings) func(ctx c
 			return err
 		}
 
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.baseUrl+path, bytes.NewBuffer(rawPayload))
+		req, err := http.NewRequestWithContext(
+			ctx,
+			http.MethodPost,
+			a.baseUrl+path,
+			bytes.NewBuffer(rawPayload),
+		)
 		if err != nil {
 			return err
 		}
