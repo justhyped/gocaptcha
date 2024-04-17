@@ -80,6 +80,7 @@ func (a *AntiCaptcha) SolveRecaptchaV3(ctx context.Context, settings *Settings, 
 		"websiteURL": payload.EndpointUrl,
 		"websiteKey": payload.EndpointKey,
 		"minScore":   payload.MinScore,
+		"pageAction": payload.Action,
 	}
 
 	result, err := a.solveTask(ctx, settings, task)
